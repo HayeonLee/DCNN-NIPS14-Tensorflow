@@ -16,7 +16,7 @@ validation_data_dir = "images/validation/"
 logs_dir = "logs"
 
 IMAGE_RESIZE = int(1)
-IMAGE_SIZE = 128
+IMAGE_SIZE = 256
 MAX_ITERATION = int(300000)
 GT_RESIZE = int(1)
 learning_rate = 1e-3
@@ -25,8 +25,8 @@ learning_rate = 1e-3
 stddev = 0.02
 
 FLAGS = tf.flags.FLAGS
-tf.flags.DEFINE_integer("tr_batch_size", "2", "batch size for training. [default : 5]")
-tf.flags.DEFINE_integer("val_batch_size", "2", "batch size for validation. [default : 5]")
+tf.flags.DEFINE_integer("tr_batch_size", "4", "batch size for training. [default : 5]")
+tf.flags.DEFINE_integer("val_batch_size", "4", "batch size for validation. [default : 5]")
 tf.flags.DEFINE_bool("reset", "True", "mode : True or False [default : True]")
 tf.flags.DEFINE_string('mode',"train", "mode : train/ test/ visualize/ evaluation [default : train]")
 tf.flags.DEFINE_string("device", "/gpu:0", "device : /cpu:0, /gpu:0 [default : /gpu:0]")
@@ -51,6 +51,7 @@ if FLAGS.reset:
     os.popen('mkdir ' + logs_dir + '/valid/loss_d')
     os.popen('mkdir ' + logs_dir + '/images')
     os.popen('mkdir ' + logs_dir + '/visualize_result')
+    os.popen('mkdir ' + logs_dir + '/images/train')
 
 
 
@@ -110,50 +111,50 @@ class DCNN :
     def DCNN_graph(self, image, is_training):
         self.is_training = is_training
 
-        image_R, image_G, image_B = tf.split(image, num_or_size_splits=3, axis=3)
+        #image_R, image_G, image_B = tf.split(image, num_or_size_splits=3, axis=3)
         ###### Deconvolution Sub-Network ######
         # Layer 1_1 : kernel size : 1*121, bias : 38, input channel : 1, output channel : 38
-        W_conv1 = weight_variable([1, 121, 1, 38])
+        W_conv1 = weight_variable([3, 121, 1, 38])
         b_conv1 = bias_variable([38])
-        h_conv1 = tf.nn.relu(conv2d(image_R, W_conv1,b_conv1))
-        #h_conv1_R = tf.nn.relu(conv2d(image_R, W_conv1, b_conv1))
-        #h_conv1_G = tf.nn.relu(conv2d(image_G, W_conv1, b_conv1))
-        #h_conv1_B = tf.nn.relu(conv2d(image_B, W_conv1, b_conv1))
+        #h_conv1 = tf.nn.relu(conv2d(image_R, W_conv1,b_conv1))
+        h_conv1_R = tf.nn.relu(conv2d(image_R, W_conv1, b_conv1))
+        h_conv1_G = tf.nn.relu(conv2d(image_G, W_conv1, b_conv1))
+        h_conv1_B = tf.nn.relu(conv2d(image_B, W_conv1, b_conv1))
 
         # Layer 1_2 : kernel size : 121*1, bias : 38, input channel : 38, output channel : 38
         W_conv2 = weight_variable([121, 1, 38, 38])
         b_conv2 = bias_variable([38])
-        h_conv2 = tf.nn.relu(conv2d(h_conv1, W_conv2, b_conv2))
-        #h_conv2_R = tf.nn.relu(conv2d(h_conv1_R, W_conv2, b_conv2))
-        #h_conv2_G = tf.nn.relu(conv2d(h_conv1_G, W_conv2, b_conv2))
-        #h_conv2_B = tf.nn.relu(conv2d(h_conv1_B, W_conv2, b_conv2))
+        #h_conv2 = tf.nn.relu(conv2d(h_conv1, W_conv2, b_conv2))
+        h_conv2_R = tf.nn.relu(conv2d(h_conv1_R, W_conv2, b_conv2))
+        h_conv2_G = tf.nn.relu(conv2d(h_conv1_G, W_conv2, b_conv2))
+        h_conv2_B = tf.nn.relu(conv2d(h_conv1_B, W_conv2, b_conv2))
 
         ###### Outlier Rejection Sub-Network ######
         # Layer 2_1 : kernel size : 16*16, bias : 512, input channel : 38, output channel : 512
         W_conv3 = weight_variable([16, 16, 38, 512])
         b_conv3 = bias_variable([512])
-        h_conv3 = tf.nn.relu(conv2d(h_conv2, W_conv3, b_conv3))
-        #h_conv3_R = tf.nn.relu(conv2d(h_conv2_R, W_conv3, b_conv3))
-        #h_conv3_G = tf.nn.relu(conv2d(h_conv2_G, W_conv3, b_conv3))
-        #h_conv3_B = tf.nn.relu(conv2d(h_conv2_B, W_conv3, b_conv3))
+        #h_conv3 = tf.nn.relu(conv2d(h_conv2, W_conv3, b_conv3))
+        h_conv3_R = tf.nn.relu(conv2d(h_conv2_R, W_conv3, b_conv3))
+        h_conv3_G = tf.nn.relu(conv2d(h_conv2_G, W_conv3, b_conv3))
+        h_conv3_B = tf.nn.relu(conv2d(h_conv2_B, W_conv3, b_conv3))
 
         # Layer 2_2 : kernel size : 1*1, bias : 512, input channel : 512, output channel : 512
         W_conv4 = weight_variable([1, 1, 512, 512])
         b_conv4 = bias_variable([512])
-        h_conv4 = tf.nn.relu(conv2d(h_conv3, W_conv4, b_conv4))
-        #h_conv4_R = tf.nn.relu(conv2d(h_conv3_R, W_conv4, b_conv4))
-        #h_conv4_G = tf.nn.relu(conv2d(h_conv3_G, W_conv4, b_conv4))
-        #h_conv4_B = tf.nn.relu(conv2d(h_conv3_B, W_conv4, b_conv4))
+        #h_conv4 = tf.nn.relu(conv2d(h_conv3, W_conv4, b_conv4))
+        h_conv4_R = tf.nn.relu(conv2d(h_conv3_R, W_conv4, b_conv4))
+        h_conv4_G = tf.nn.relu(conv2d(h_conv3_G, W_conv4, b_conv4))
+        h_conv4_B = tf.nn.relu(conv2d(h_conv3_B, W_conv4, b_conv4))
 
         ###### Restoration ######
         # Layer 3 : Deconv(Transpose conv) of kernel size : 8*8, bias : 512, input channel : 1, output channel : 512
         # Use conv function (Same) : kernel size : 8*8, bias : 1, input channel : 512, output channel : 1
         W_conv5 = weight_variable([8, 8, 512, 1])
         b_conv5 = bias_variable([1])
-        o_conv5 = conv2d(h_conv4, W_conv5, b_conv5)
-        #o_conv5_R = conv2d(h_conv4_R, W_conv5, b_conv5)
-        #o_conv5_G = conv2d(h_conv4_G, W_conv5, b_conv5)
-        #o_conv5_B = conv2d(h_conv4_B, W_conv5, b_conv5)
+        #o_conv5 = conv2d(h_conv4, W_conv5, b_conv5)
+        o_conv5_R = conv2d(h_conv4_R, W_conv5, b_conv5)
+        o_conv5_G = conv2d(h_conv4_G, W_conv5, b_conv5)
+        o_conv5_B = conv2d(h_conv4_B, W_conv5, b_conv5)
         # Use deconv function
         # W_dconv5 = weight_variable([8, 8, 512, 1])
         # b_dconv5 = bias_variable([1])
@@ -161,16 +162,17 @@ class DCNN :
         # o_conv5_G = tf.tanh(dconv2d(h_conv4_G, W_dconv5, output_shape=[batch_size, IMAGE_SIZE * IMAGE_RESIZE, IMAGE_SIZE * IMAGE_RESIZE, 1], b_dconv5))
         # o_conv5_B = tf.tanh(dconv2d(h_conv4_B, W_dconv5, output_shape=[batch_size, IMAGE_SIZE * IMAGE_RESIZE, IMAGE_SIZE * IMAGE_RESIZE, 1], b_dconv5))
 
-        #predict_y = tf.concat([o_conv5_R, o_conv5_G, o_conv5_B], 3)
-        predict_y = o_conv5
+        predict_y = tf.concat([o_conv5_R, o_conv5_G, o_conv5_B], 3)
+        #predict_y = o_conv5
         return predict_y
 
 def train(is_training=True):
     ###############################  GRAPH PART  ###############################
     print("Graph Initialization...")
     with tf.device(FLAGS.device):
-        with tf.variable_scope("model", reuse=False):
+        with tf.variable_scope("model") as scope:
             m_train = DCNN(FLAGS.tr_batch_size, is_training=True)
+	    scope.reuse_variables()
         #with tf.variable_scope("model", reuse=True): # reuse trained parameters above (name: model/..:0)
             m_valid = DCNN(FLAGS.val_batch_size, is_training=False)
     print("Done")
@@ -194,10 +196,10 @@ def train(is_training=True):
     print("Done")
 
     ############################  Model Save Part  #############################
-    print("Setting up Saver...")
-    saver = tf.train.Saver()
-    ckpt = tf.train.get_checkpoint_state(logs_dir)
-    print("Done")
+    #print("Setting up Saver...")
+    #saver = tf.train.Saver()
+    #ckpt = tf.train.get_checkpoint_state(logs_dir)
+    #print("Done")
 
     ################################  Datareader Part  ################################
     print("Datareader Initialization...")
@@ -223,11 +225,11 @@ def train(is_training=True):
     sess_config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=False)
     sess_config.gpu_options.allow_growth = True
     sess = tf.Session(config=sess_config)
-    if ckpt and ckpt.model_checkpoint_path:
-        saver.restore(sess, ckpt.model_checkpoint_path)
-        print("Model restored...")
-    else:
-        sess.run(tf.global_variables_initializer())
+    #if ckpt and ckpt.model_checkpoint_path:
+    #    saver.restore(sess, ckpt.model_checkpoint_path)
+    #    print("Model restored...")
+    #else:
+    sess.run(tf.global_variables_initializer())
     print("Done")
 
     #############################     Train      ###############################
@@ -251,11 +253,11 @@ def train(is_training=True):
                 valid_high_resolution_image = valid_high_resolution_image.astype(np.uint8)
                 valid_predict_y = valid_predict_y.astype(np.uint8)
 
-                image_R,_,_ = np.split(train_high_resolution_image,3, axis=3)
-                image_R2,_,_ = np.split(valid_high_resolution_image,3, axis=3)
+                #image_R,_,_ = np.split(train_high_resolution_image,3, axis=3)
+                #image_R2,_,_ = np.split(valid_high_resolution_image,3, axis=3)
 
-                train_psnr, train_ssim = ev.evaluator(FLAGS.tr_batch_size, image_R, train_predict_y)
-                valid_psnr, valid_ssim = ev.evaluator(FLAGS.val_batch_size, image_R2, valid_predict_y)
+                train_psnr, train_ssim = ev.evaluator(FLAGS.tr_batch_size, train_high_resolution_image, train_predict_y)
+                valid_psnr, valid_ssim = ev.evaluator(FLAGS.val_batch_size, valid_high_resolution_image, valid_predict_y)
                 tr_loss_str, tr_psnr_str, tr_ssim_str = sess.run([loss_summary_op, psnr_summary_op, ssim_summary_op], feed_dict={loss: train_loss, psnr: train_psnr, ssim: train_ssim})
                 valid_loss_str, valid_psnr_str, valid_ssim_str = sess.run([loss_summary_op, psnr_summary_op, ssim_summary_op], feed_dict={loss: valid_loss, psnr: valid_psnr, ssim: valid_ssim})
                 print("%s ---> Validation_loss: %g" % (datetime.datetime.now(), valid_loss))
@@ -272,8 +274,8 @@ def train(is_training=True):
                 print("Step: %d, Train_mean_PSNR:%g" % (itr, train_psnr))
                 print("Step: %d, Train_mean_SSIM:%g" % (itr, train_ssim))
 
-            if itr % 50 == 0:
-                saver.save(sess, logs_dir + "/model.ckpt", itr)
+            #if itr % 50 == 0:
+            #    saver.save(sess, logs_dir + "/model.ckpt", itr)
 
             if itr % 50 == 0:
                 visual_low_resolution_image, visual_high_resolution_image = validation_dataset_reader.random_batch(
@@ -281,22 +283,24 @@ def train(is_training=True):
                 visual_dict = {m_valid.low_resolution_image: visual_low_resolution_image,
                                    m_valid.high_resolution_image: visual_high_resolution_image}
                 predict = sess.run(m_valid.predict_y, feed_dict=visual_dict)
-                image_r,_,_ = np.split(visual_high_resolution_image,3,axis=3)
-                image_r2,_,_ = np.split(visual_low_resolution_image,3,axis=3)
+                #image_r,_,_ = np.split(visual_high_resolution_image,3,axis=3)
+                #image_r2,_,_ = np.split(visual_low_resolution_image,3,axis=3)
 
-                utils.save_images(FLAGS.val_batch_size, logs_dir + '/images', image_r2, predict,
-                                  image_r, itr, show_image=False)
+                utils.save_images(FLAGS.val_batch_size, logs_dir + '/images', visual_high_resolution_image, predict,
+                                  visual_low_resolution_image, itr, show_image=False)
                 print('Validation images were saved!')
-
+                utils.save_images(FLAGS.tr_batch_size, logs_dir + '/images/train', train_low_resolution_image, train_predict_y,
+                                  train_high_resolution_image, itr, show_image=False)
+                print('Train images were saved!')
     ###########################     Visualize     ##############################
     elif FLAGS.mode == "visualize":
 
         visual_low_resolution_image, visual_high_resolution_image = validation_dataset_reader.random_batch(FLAGS.val_batch_size)
         visual_dict = {m_valid.low_resolution_image: visual_low_resolution_image,
                                m_valid.high_resolution_image: visual_high_resolution_image}
-        predict = sess.run(m_valid.predict_y, feed_dict=visual_dict)
-        utils.save_images(FLAGS.val_batch_size, validation_data_dir, visual_low_resolution_image, predict,
-                                  visual_high_resolution_image,0, show_image=False)
+        #predict = sess.run(m_valid.predict_y, feed_dict=visual_dict)
+        #utils.save_images(FLAGS.val_batch_size, validation_data_dir, visual_low_resolution_image, predict,
+        #                          visual_high_resolution_image,0, show_image=False)
         print('Validation images were saved!')
 
 
